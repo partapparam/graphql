@@ -25,11 +25,14 @@ let persons = [
 ]
 
 const typeDefs = `
+    type Address {
+      street: String!
+      city: String!
+    }
     type Person {
         name: String!
         phone: String
-        street: String!
-        city: String!
+        address: Address!
         id: ID!
     }
 
@@ -39,12 +42,28 @@ const typeDefs = `
         findPerson(name: String!): Person
     }
 `
-
+// resolvers return the data, essentially how the query actually gives us thhe data we ask for.
 const resolvers = {
   Query: {
     personCount: () => persons.length,
     allPersons: () => persons,
     findPerson: (root, args) => persons.find((p) => p.name === args.name),
+  },
+  // gql server must define resolvers for each field of each Type in the schema.
+  // so far we only defined resolvers for fields of the type Query
+  // this is defualt resolvers, which Apollo defines if we dont
+  // they return the value of the field of thhe object
+  // if the default is enough we don't need to define out own.
+  Person: {
+    name: (root) => root.name,
+    phone: (root) => root.phone,
+    id: (root) => root.id,
+    address: (root) => {
+      return {
+        street: root.street,
+        city: root.city,
+      }
+    },
   },
 }
 
