@@ -48,7 +48,7 @@ const typeDefs = `
         findPerson(name: String!): Person
     }
 
-    type Mutations {
+    type Mutation {
       addPerson(
         name: String!
         phone: String
