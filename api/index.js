@@ -1,5 +1,6 @@
 const { ApolloServer } = require("@apollo/server")
 const { startStandaloneServer } = require("@apollo/server/standalone")
+const { GraphQLError } = require("graphql")
 
 let persons = [
   {
@@ -25,6 +26,11 @@ let persons = [
 ]
 
 const typeDefs = `
+    enum YesNo {
+      YES
+      NO
+    }
+
     type Address {
       street: String!
       city: String!
@@ -38,22 +44,63 @@ const typeDefs = `
 
     type Query {
         personCount: Int!
-        allPersons: [Person!]!
+        allPersons(phone: YesNo): [Person!]!
         findPerson(name: String!): Person
     }
+
+    type Mutations {
+      addPerson(
+        name: String!
+        phone: String
+        street: String!
+        city: String
+      ): Person
+
+      editNumber(
+        name: String!
+        phone: String!
+      ): Person
+    }
 `
-// resolvers return the data, essentially how the query actually gives us thhe data we ask for.
 const resolvers = {
   Query: {
     personCount: () => persons.length,
-    allPersons: () => persons,
+    allPersons: (root, args) => {
+      if (!args.phone) {
+        return persons
+      }
+      const byPhone = (person) => {
+        return args.phone === "YES" ? person.phone : !person.phone
+      }
+      return persons.filter(byPhone)
+    },
     findPerson: (root, args) => persons.find((p) => p.name === args.name),
   },
-  // gql server must define resolvers for each field of each Type in the schema.
-  // so far we only defined resolvers for fields of the type Query
-  // this is defualt resolvers, which Apollo defines if we dont
-  // they return the value of the field of thhe object
-  // if the default is enough we don't need to define out own.
+  // let the database make the ID, we don't need to do that here. Only since it's hardcoded
+  Mutation: {
+    addPerson: (root, args) => {
+      // custom error with GraphQLError class. Provides more context on what went wrong. Helps the client to understand why the error is happening.
+      if (persons.find((p) => p.name === args.name)) {
+        throw new GraphQLError("Name must be unique", {
+          extensions: {
+            code: "BAD_USER_INPUT",
+            invalidArgs: args.name,
+          },
+        })
+      }
+      const person = { ...args, id: 1234 }
+      persons = person.concat(person)
+      return person
+    },
+    editNumber: (root, args) => {
+      const person = persons.find((p) => p.name === args.name)
+      if (!person) return null
+      const updatedPerson = { ...person, phone: args.phone }
+      persons = persons.map((p) => (p.name === args.name ? updatedPerson : p))
+      return updatedPerson
+    },
+  },
+
   Person: {
     name: (root) => root.name,
     phone: (root) => root.phone,
