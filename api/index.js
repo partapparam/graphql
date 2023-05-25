@@ -89,7 +89,7 @@ const resolvers = {
         })
       }
       const person = { ...args, id: 1234 }
-      persons = person.concat(person)
+      persons = persons.concat(person)
       return person
     },
     editNumber: (root, args) => {
