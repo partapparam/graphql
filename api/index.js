@@ -4,6 +4,8 @@ const { GraphQLError } = require("graphql")
 const mongoose = require("mongoose")
 mongoose.set("strictQuery", false)
 const Person = require("./models/person")
+const User = require("./models/user")
+const jwt = require("jsonwebtoken")
 
 require("dotenv").config()
 
@@ -37,13 +39,33 @@ const typeDefs = `
         id: ID!
     }
 
+    type User {
+      username: String!
+      friends: [Person!]!
+      id: ID!
+    }
+
+    type Token {
+      value: String!
+    }
+
     type Query {
         personCount: Int!
         allPersons(phone: YesNo): [Person!]!
         findPerson(name: String!): Person
+        me: User
     }
 
     type Mutation {
+      createUser(
+        username: String!
+      ): User
+      
+      login(
+        username: String!
+        password: String!
+      ):Token
+
       addPerson(
         name: String!
         phone: String
@@ -70,6 +92,36 @@ const resolvers = {
     findPerson: (root, args) => Person.findOne({ name: args.name }),
   },
   Mutation: {
+    createUser: async (root, args) => {
+      const user = await new User({ ...args })
+      try {
+        user.save()
+      } catch (error) {
+        throw new GraphQLError("Username not createed", {
+          extensions: {
+            code: "BAD_USER_INPUT",
+            invalidArgs: args.name,
+          },
+        })
+      }
+      return user
+    },
+    login: async (root, args) => {
+      const user = await User.findOne({ username: args.username })
+      if (!user || args.password !== "secret") {
+        throw new GraphQLError("user does not exist", {
+          extensions: {
+            code: "BAD_USER_INPUT",
+            invalidArgs: args.name,
+          },
+        })
+      }
+      const userForToken = {
+        username: user.username,
+        id: user._id,
+      }
+      return { value: jwt.sign(userForToken, process.env.JWT_SECRET) }
+    },
     addPerson: async (root, args) => {
       const person = await new Person({ ...args })
       try {
@@ -119,6 +171,18 @@ const server = new ApolloServer({
 
 startStandaloneServer(server, {
   listen: { port: 4000 },
+  context: async ({ req, res }) => {
+    const auth = req ? req.headers.authorization : null
+    if (auth && auth.startsWith("Bearer ")) {
+      const decodedToken = jwt.verify(auth.substring(7), process.env.JWT_SECRET)
+
+      const currentUser = await User.findById(decodedToken.id).populate(
+        "friends"
+      )
+      console.log("here is the current user", currentUser)
+      return { currentUser }
+    }
+  },
 }).then(({ url }) => {
   console.log(`Server ready at ${url}`)
 })
