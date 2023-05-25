@@ -73,7 +73,7 @@ function App() {
       <Notify errorMessage={errorMessage} />
       <Persons persons={result.data.allPersons} />
       <AddPerson setError={notify} />
-      <EditNumber />
+      <EditNumber setError={notify} />
     </div>
   )
 }

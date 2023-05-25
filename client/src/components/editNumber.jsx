@@ -1,13 +1,13 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import React from "react"
 import { useMutation } from "@apollo/client"
 import { EDIT_NUMBER } from "../queries/queries"
 
-export const EditNumber = () => {
+export const EditNumber = ({ setError }) => {
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
 
-  const [changeNumber] = useMutation(EDIT_NUMBER)
+  const [changeNumber, result] = useMutation(EDIT_NUMBER)
 
   const submit = (e) => {
     e.preventDefault()
@@ -15,6 +15,12 @@ export const EditNumber = () => {
     setName("")
     setPhone("")
   }
+
+  useEffect(() => {
+    if (result.data && result.data.EditNumber === null) {
+      setError("Person does not exist. ")
+    }
+  }, [result.data])
 
   return (
     <div>
