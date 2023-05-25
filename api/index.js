@@ -90,6 +90,7 @@ const resolvers = {
       // args.phone === 'YES' will be TRUE or FALSE
     },
     findPerson: (root, args) => Person.findOne({ name: args.name }),
+    me: (root, args, context) => context.currentUser,
   },
   Mutation: {
     createUser: async (root, args) => {
@@ -106,7 +107,8 @@ const resolvers = {
       }
       return user
     },
-    login: async (root, args) => {
+    login: async (root, args, context) => {
+      console.log("Here is the context value", context.currentUser.username)
       const user = await User.findOne({ username: args.username })
       if (!user || args.password !== "secret") {
         throw new GraphQLError("user does not exist", {
@@ -122,12 +124,26 @@ const resolvers = {
       }
       return { value: jwt.sign(userForToken, process.env.JWT_SECRET) }
     },
-    addPerson: async (root, args) => {
+    addPerson: async (root, args, context) => {
       const person = await new Person({ ...args })
+      const currentUser = context.currentUser
+
+      if (!currentUser) {
+        throw new GraphQLError("Action not allowed, requires login", {
+          extensions: {
+            code: "BAD_USER_INPUT",
+          },
+        })
+      }
       try {
         await person.save()
+        // We are able to update MongoDB by updating the User then Save()
+        // Do not need to
+        currentUser.friends = currentUser.friends.concat(person)
+        currentUser.save()
+        console.log(currentUser)
       } catch (error) {
-        throw new GraphQLError("Name must be unique", {
+        throw new GraphQLError(error, {
           extensions: {
             code: "BAD_USER_INPUT",
             invalidArgs: args.name,
@@ -169,6 +185,13 @@ const server = new ApolloServer({
   resolvers,
 })
 
+/**
+ * CONTEXT: the context function is used to pass useful things any resolver might need, like Auth Scope
+ * Server calls CONTEXT once for each request
+ *
+ * Should be Async and return an Object
+ * The returned Object is then accessible to resolvers via ContextValue
+ */
 startStandaloneServer(server, {
   listen: { port: 4000 },
   context: async ({ req, res }) => {
@@ -179,7 +202,7 @@ startStandaloneServer(server, {
       const currentUser = await User.findById(decodedToken.id).populate(
         "friends"
       )
-      console.log("here is the current user", currentUser)
+      // console.log("here is the current user", currentUser)
       return { currentUser }
     }
   },
