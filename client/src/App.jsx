@@ -3,30 +3,7 @@ import React, { useState } from "react"
 import "./App.css"
 import { gql, useQuery } from "@apollo/client"
 import { AddPerson } from "./components/addPerson"
-
-export const ALL_PERSONS = gql`
-  query {
-    allPersons {
-      name
-      phone
-      id
-    }
-  }
-`
-
-const FIND_PERSON = gql`
-  query findPersonByName($nameToSearch: String!) {
-    findPerson(name: $nameToSearch) {
-      name
-      phone
-      id
-      address {
-        street
-        city
-      }
-    }
-  }
-`
+import { ALL_PERSONS, FIND_PERSON } from "./queries/queries"
 
 const Person = ({ person, onClose }) => {
   return (
@@ -65,20 +42,36 @@ const Persons = ({ persons }) => {
           <button onClick={() => setNameToSearch(p.name)}>show address</button>
         </div>
       ))}
-      <AddPerson />
     </div>
   )
 }
 
+const Notify = ({ errorMessage }) => {
+  if (!errorMessage) {
+    return null
+  }
+  return <div style={{ color: "red" }}>{errorMessage}</div>
+}
+
 function App() {
   const result = useQuery(ALL_PERSONS)
+  const [errorMessage, setErrorMessage] = useState(null)
   if (result.loading) {
     console.log(result)
     return <div>Loading........</div>
   }
+
+  const notify = (message) => {
+    setErrorMessage(message)
+    setTimeout(() => {
+      setErrorMessage(null)
+    }, 5000)
+  }
   return (
     <div className="App">
+      <Notify errorMessage={errorMessage} />
       <Persons persons={result.data.allPersons} />
+      <AddPerson setError={notify} />
     </div>
   )
 }
