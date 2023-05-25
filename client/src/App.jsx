@@ -4,6 +4,7 @@ import "./App.css"
 import { gql, useQuery } from "@apollo/client"
 import { AddPerson } from "./components/addPerson"
 import { ALL_PERSONS, FIND_PERSON } from "./queries/queries"
+import { EditNumber } from "./components/editNumber"
 
 const Person = ({ person, onClose }) => {
   return (
@@ -72,6 +73,7 @@ function App() {
       <Notify errorMessage={errorMessage} />
       <Persons persons={result.data.allPersons} />
       <AddPerson setError={notify} />
+      <EditNumber />
     </div>
   )
 }
