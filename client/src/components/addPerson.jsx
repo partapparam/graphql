@@ -8,7 +8,21 @@ export const AddPerson = ({ setError }) => {
   const [street, setStreet] = useState(null)
   const [city, setCity] = useState(null)
   const [createPerson] = useMutation(CREATE_PERSON, {
-    refetchQueries: [{ query: ALL_PERSONS }],
+    /**
+     *
+     * Refetch queries works but it will send a query request everytime an update is done
+     *
+     * Using Update Callback - Apollo runs this after the mutation, and is given reference to the existing Cache and data returned by the mutation
+     * Cache.UpdateQuery updates the ALL_PERSONS query in cache and adds new person to the cache.
+     */
+    // refetchQueries: [{ query: ALL_PERSONS }],
+    update: (cache, response) => {
+      cache.updateQuery({ query: ALL_PERSONS }, ({ allPersons }) => {
+        return {
+          allPersons: allPersons.concat(response.data.addPerson),
+        }
+      })
+    },
     onError: (error) => {
       const message = error.graphQLErrors[0].message
       setError(message)
