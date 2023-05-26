@@ -173,6 +173,8 @@ const resolvers = {
       return person
     },
     addAsFriend: async (root, args, { currentUser }) => {
+      // Function to confirm Person is not already friend of user. Take in person, convert id to string and compare it friends ID for current user
+      // could also use filter()
       const isFriend = (person) =>
         currentUser.friends
           .map((f) => f._id.toString())

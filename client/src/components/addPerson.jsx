@@ -18,7 +18,14 @@ export const AddPerson = ({ setError }) => {
   const submit = (event) => {
     event.preventDefault()
 
-    createPerson({ variables: { name, phone, street, city } })
+    createPerson({
+      variables: {
+        name,
+        street,
+        city,
+        phone,
+      },
+    })
     setName(null)
     setPhone(null)
     setStreet(null)

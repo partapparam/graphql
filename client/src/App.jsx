@@ -1,10 +1,10 @@
-import logo from "./logo.svg"
 import React, { useState } from "react"
 import "./App.css"
-import { gql, useQuery } from "@apollo/client"
+import { useQuery, useApolloClient } from "@apollo/client"
 import { AddPerson } from "./components/addPerson"
 import { ALL_PERSONS, FIND_PERSON } from "./queries/queries"
 import { EditNumber } from "./components/editNumber"
+import { LoginForm } from "./components/LoginForm"
 
 const Person = ({ person, onClose }) => {
   return (
@@ -55,22 +55,35 @@ const Notify = ({ errorMessage }) => {
 }
 
 function App() {
+  const [token, setToken] = useState(null)
   const result = useQuery(ALL_PERSONS)
   const [errorMessage, setErrorMessage] = useState(null)
-  if (result.loading) {
-    console.log(result)
-    return <div>Loading........</div>
-  }
-
+  const client = useApolloClient()
   const notify = (message) => {
     setErrorMessage(message)
     setTimeout(() => {
       setErrorMessage(null)
     }, 5000)
   }
+  if (result.loading) {
+    console.log(result)
+    return <div>Loading........</div>
+  }
+  const logout = () => {}
+
+  if (!token) {
+    return (
+      <div>
+        <Notify errorMessage={errorMessage} />
+        <h2>Login</h2>
+        <LoginForm setToken={setToken} setError={notify} />
+      </div>
+    )
+  }
   return (
     <div className="App">
       <Notify errorMessage={errorMessage} />
+      <button onClick={logout}>Logout</button>
       <Persons persons={result.data.allPersons} />
       <AddPerson setError={notify} />
       <EditNumber setError={notify} />
