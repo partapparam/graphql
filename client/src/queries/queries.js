@@ -1,5 +1,17 @@
 import { gql } from "@apollo/client"
 
+export const PERSON_DETAILS = gql`
+  fragment PersonDetails on Person {
+    id
+    name
+    phone
+    address {
+      street
+      city
+    }
+  }
+`
+
 export const ALL_PERSONS = gql`
   query {
     allPersons {
@@ -13,15 +25,10 @@ export const ALL_PERSONS = gql`
 export const FIND_PERSON = gql`
   query findPersonByName($nameToSearch: String!) {
     findPerson(name: $nameToSearch) {
-      name
-      phone
-      id
-      address {
-        street
-        city
-      }
+      ...PersonDetails
     }
   }
+  ${PERSON_DETAILS}
 `
 
 export const CREATE_PERSON = gql`
