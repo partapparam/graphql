@@ -77,6 +77,10 @@ const typeDefs = `
         name: String!
         phone: String!
       ): Person
+
+      addAsFriend(
+        name: String!
+      ): User
     }
 `
 const resolvers = {
@@ -167,6 +171,23 @@ const resolvers = {
         })
       }
       return person
+    },
+    addAsFriend: async (root, args, { currentUser }) => {
+      const isFriend = (person) =>
+        currentUser.friends
+          .map((f) => f._id.toString())
+          .includes(person._id.toString())
+      if (!currentUser) {
+        throw new GraphQLError("User does not exist", {
+          extensions: { code: "BAD_USER_INPUT" },
+        })
+      }
+      const person = await User.findOne({ name: args.name })
+      if (!isFriend(person)) {
+        currentUser.friends = currentUser.friends.concat(person)
+      }
+      await currentUser.save()
+      return currentUser
     },
   },
 
