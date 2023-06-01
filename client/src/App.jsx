@@ -1,8 +1,13 @@
 import React, { useState } from "react"
 import "./App.css"
-import { useQuery, useApolloClient } from "@apollo/client"
+import {
+  useQuery,
+  useApolloClient,
+  useMutation,
+  useSubscription,
+} from "@apollo/client"
 import { AddPerson } from "./components/addPerson"
-import { ALL_PERSONS, FIND_PERSON } from "./queries/queries"
+import { ALL_PERSONS, FIND_PERSON, PERSON_ADDED } from "./queries/queries"
 import { EditNumber } from "./components/editNumber"
 import { LoginForm } from "./components/LoginForm"
 
@@ -59,6 +64,12 @@ function App() {
   const result = useQuery(ALL_PERSONS)
   const [errorMessage, setErrorMessage] = useState(null)
   const client = useApolloClient()
+  useSubscription(PERSON_ADDED, {
+    onData: ({ data }) => {
+      console.log(data)
+    },
+  })
+
   const notify = (message) => {
     setErrorMessage(message)
     setTimeout(() => {
