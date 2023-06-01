@@ -20,7 +20,7 @@ const httpLink = createHttpLink({
   uri: "http://localhost:4000",
 })
 
-const wsLink = new GraphQLWsLink(createClient({ uri: "ws://localhost:4000" }))
+const wsLink = new GraphQLWsLink(createClient({ url: "ws://localhost:4000" }))
 
 // Define a context header object so that a possible token in localstorage is set to header auth. for each request to the server.
 const authLink = setContext((_, { headers }) => {
@@ -51,23 +51,23 @@ const client = new ApolloClient({
   link: splitLink,
 })
 
-const query = gql`
-  query {
-    allPersons {
-      name
-      phone
-      address {
-        street
-        city
-      }
-      id
-    }
-  }
-`
+// const query = gql`
+//   query {
+//     allPersons {
+//       name
+//       phone
+//       address {
+//         street
+//         city
+//       }
+//       id
+//     }
+//   }
+// `
 
-client.query({ query }).then((response) => {
-  console.log(response.data)
-})
+// client.query({ query }).then((response) => {
+//   console.log(response.data)
+// })
 
 const root = ReactDOM.createRoot(document.getElementById("root"))
 root.render(

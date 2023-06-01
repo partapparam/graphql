@@ -21,6 +21,7 @@ const resolvers = {
   },
   Mutation: {
     createUser: async (root, args) => {
+      console.log("creating user called", args)
       const user = await new User({ ...args })
       try {
         user.save()
@@ -35,8 +36,9 @@ const resolvers = {
       return user
     },
     login: async (root, args, context) => {
-      console.log("Here is the context value", context.currentUser.username)
+      // console.log("Here is the context value", context.currentUser.username)
       const user = await User.findOne({ username: args.username })
+      console.log(args, user)
       if (!user || args.password !== "secret") {
         throw new GraphQLError("user does not exist", {
           extensions: {
@@ -78,7 +80,7 @@ const resolvers = {
         })
       }
       // adding a new person publishes a notification about the operation to all subscribers.
-      pubsub.publish("PERSON_ADDED", { personAdded: person })
+      // pubsub.publish("PERSON_ADDED", { personAdded: person })
       return person
     },
     editNumber: async (root, args) => {

@@ -16,7 +16,6 @@ const { useServer } = require("graphql-ws/lib/use/ws")
 
 const mongoose = require("mongoose")
 mongoose.set("strictQuery", false)
-const Person = require("./models/person")
 const User = require("./models/user")
 const jwt = require("jsonwebtoken")
 const typeDefs = require("./schema")
@@ -26,10 +25,8 @@ require("dotenv").config()
 
 const MONGO_DB_URI = process.env.MONGO_DB_URI
 
-console.log("connection to ", MONGO_DB_URI)
-
 mongoose
-  .connect(MONGO_DB_URI)
+  .connect(MONGO_DB_URI, { useNewUrlParser: true })
   .then(() => {
     console.log("connected to mongodb")
   })
@@ -117,11 +114,14 @@ const start = async () => {
             auth.substring(7),
             process.env.JWT_SECRET
           )
+          console.log(decodedToken)
+
           const currentUser = await User.findById(decodedToken.id).populate(
             "friends"
           )
           return { currentUser }
         }
+        return
       },
     })
   )

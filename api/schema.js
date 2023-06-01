@@ -17,7 +17,7 @@ const typeDefs = `
 
     type User {
       username: String!
-      friends: [Person!]!
+      friends: [Person!]
       id: ID!
     }
 

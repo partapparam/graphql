@@ -6,8 +6,10 @@ import { LOGIN } from "../queries/queries"
 export const LoginForm = ({ setToken, setError }) => {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+
   const [login, result] = useMutation(LOGIN, {
     onError: (error) => {
+      console.log("we got an error", error.graphQLErrors)
       setError(error.graphQLErrors[0].message)
     },
   })
@@ -21,7 +23,7 @@ export const LoginForm = ({ setToken, setError }) => {
   }, [result.data]) //eslint-disable-line
   const submit = async (event) => {
     event.preventDefault()
-
+    console.log(username, password)
     login({ variables: { username, password } })
   }
 

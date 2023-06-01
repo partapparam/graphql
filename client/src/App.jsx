@@ -67,19 +67,27 @@ function App() {
   useSubscription(PERSON_ADDED, {
     onData: ({ data }) => {
       console.log(data)
+      const addedPerson = data.data.personAdded
+      notify(`${addedPerson.name} added`)
+
+      client.cache.updateQuery({ query: ALL_PERSONS }, ({ allPersons }) => {
+        return {
+          allPersons: allPersons.concat(addedPerson),
+        }
+      })
     },
   })
-
+  if (result.loading) {
+    console.log(result)
+    return <div>Loading........</div>
+  }
   const notify = (message) => {
     setErrorMessage(message)
     setTimeout(() => {
       setErrorMessage(null)
     }, 5000)
   }
-  if (result.loading) {
-    console.log(result)
-    return <div>Loading........</div>
-  }
+
   const logout = () => {
     client.resetStore()
   }
