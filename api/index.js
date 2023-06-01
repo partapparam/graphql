@@ -68,18 +68,39 @@ const server = new ApolloServer({
 // })
 
 /**
- * For Subscriptions to be setup correctly, we setup the Server with a fucntion
- *
+ * For Subscriptions to be setup correctly, we setup the WebSocket Server with a function
+ * When Queries and Mutations are made, it will use the HTTP server.
  */
 
 const start = async () => {
   const app = express()
   const httpServer = http.createServer(app)
 
+  const wsServer = new WebSocketServer({
+    server: httpServer,
+    path: "/",
+  })
+
+  const schema = makeExecutableSchema({ typeDefs, resolvers })
+  // WSServer Object is registered to listen to WS connections, besides the usual HTTP connections
+  const serverCleanup = useServer({ schema }, wsServer)
+
   const server = new ApolloServer({
-    schema: makeExecutableSchema({ typeDefs, resolvers }),
+    schema,
     // this plugin is recommended to ensure the server shuts down correctly
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    // Function will close WS connection on server shutdown
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      {
+        async serverWillStart() {
+          return {
+            async drainServer() {
+              await serverCleanup.dispose()
+            },
+          }
+        },
+      },
+    ],
   })
   // The Graphql server has to start first, so we use Await
   await server.start()
