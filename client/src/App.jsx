@@ -69,7 +69,9 @@ function App() {
     console.log(result)
     return <div>Loading........</div>
   }
-  const logout = () => {}
+  const logout = () => {
+    client.resetStore()
+  }
 
   if (!token) {
     return (
